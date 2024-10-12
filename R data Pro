@@ -1,0 +1,273 @@
+title: "R Data part 2"
+author: "Razieh Fathinezhad, Tasfia Tasnim, Tanjila Tabassom"
+date: "2024-10-11"
+output:
+  pdf_document: default
+  html_document: default
+  word_document: default
+---
+
+```{r}
+library(R.utils)
+library("seqinr")
+
+```
+```{r}
+URL="https://ftp.ensemblgenomes.ebi.ac.uk/pub/bacteria/release-59/fasta/bacteria_0_collection/escherichia_coli_str_k_12_substr_mg1655_gca_000005845/cds/Escherichia_coli_str_k_12_substr_mg1655_gca_000005845.ASM584v2.cds.all.fa.gz"
+#download.file(URL,destfile="ecoli_cds.fa.gz")
+#gunzip("ecoli_cds.fa.gz")
+```
+
+```{r}
+cds <- seqinr::read.fasta("ecoli_cds.fa")
+
+```
+
+```{r for download}
+#URL = "https://ftp.ensemblgenomes.ebi.ac.uk/pub/bacteria/release-59/fasta/bacteria_4_collection/mycobacterium_tuberculosis_gca_001318445/cds/Mycobacterium_tuberculosis_gca_001318445.6505_5_10.cds.all.fa.gz"
+#download.file(URL,destfile="mycobacterium_cds.fa.gz")
+#gunzip("mycobacterium_cds.fa.gz")
+```
+
+```{r}
+#library(R.utils)
+#strgunzip("mycobacterium_cds.fa.gz")
+```
+
+```{r}
+#gunzip("mycobacterium_cds.fa.gz", remove = FALSE)
+```
+
+```{r}
+cds_mycobacterium <- seqinr::read.fasta("mycobacterium_cds.fa")
+```
+
+```{r}
+cds <- seqinr::read.fasta("ecoli_cds.fa")
+```
+
+```{r}
+length(cds)
+length(cds_mycobacterium)
+```
+
+```{r}
+table <- data.frame(
+  E.coli = 4239,
+  Mycobacterium = 4741
+)
+print(table)
+```
+
+```{r}
+head(summary(cds))
+head(summary(cds_mycobacterium))
+```
+
+```{r}
+len <- as.numeric(summary(cds)[,1])
+sum(len)
+lenm <- as.numeric(summary(cds_mycobacterium)[,1])
+sum(lenm)
+```
+
+```{r}
+sum(len)
+sum(lenm)
+mean(len)
+mean(lenm)
+median(len)
+median(lenm)
+```
+
+```{r}
+par(mfrow=c(1,2)) 
+boxplot(len,ylab="sequence length (bp)",main="E.coli")
+boxplot(lenm,ylab="sequence length (bp)",main="Meycobacterium")
+```
+
+```{r}
+E.coliDNA <- unlist(cds)
+dna_composition_e.coli <- count(E.coliDNA,1)
+MycobacteriumDNA <- unlist(cds_mycobacterium)
+dna_composition_mycobacterium <- count(MycobacteriumDNA,1)
+par(mfrow=c(1,2))
+barplot(dna_composition_e.coli,main="E.coli")
+barplot(dna_composition_mycobacterium,main="Mycobacterium")
+```
+
+```{r}
+dna_composition_e.coli/sum(dna_composition_e.coli)
+dna_composition_mycobacterium/sum(dna_composition_mycobacterium)
+```
+
+```{r}
+prot <- lapply(cds, translate)
+aa <- unique(prot[[2]])
+aa <- aa[aa != "*"]
+length(aa)
+
+protm <- lapply(cds_mycobacterium, translate)
+am <- unique(protm[[2]])
+am <- am[am != "*"]
+length(am)
+```
+
+```{r}
+E.coliProt <- unlist (prot)
+prot_composition_e.coli <- count(E.coliProt,wordsize=1,alphabet=aa)
+
+MycobacteriumProt <- unlist (protm)
+prot_composition_mycobacterium <- count(MycobacteriumProt,wordsize=1,alphabet=am)
+
+par(mfrow=c(1,2))
+barplot(prot_composition_e.coli,main="E.coli")
+barplot(prot_composition_mycobacterium,main="Mycobacterium")
+```
+
+```{r}
+prot_composition_e.coli/sum(prot_composition_e.coli )
+prot_composition_mycobacterium/sum(prot_composition_mycobacterium)
+```
+
+```{r}
+prots <- unlist(prot)
+mycounts3 <- count(prots,wordsize=3,alphabet=aa)
+mycounts4 <- count(prots,wordsize=4,alphabet=aa)
+mycounts5 <- count(prots,wordsize=5,alphabet=aa)
+```
+
+```{r}
+install.packages("seqinr")
+library(seqinr)
+```
+
+```{r}
+codon_usage_ecoli <- lapply(cds, uco)
+```
+
+```{r}
+summed_codons_ecoli <- Reduce("+", codon_usage_ecoli)
+print(summed_codons_ecoli)
+```
+
+```{r}
+codon_usage_mycobacterium <- lapply(cds_mycobacterium, uco)
+
+```
+
+```{r}
+summed_codons_mycobacterium <- Reduce("+", codon_usage_mycobacterium)
+print(summed_codons_mycobacterium)
+```
+
+```{r}
+par(mfrow = c(2, 1)) # Two charts in one row
+
+# Barplot for E. coli codon usage
+barplot(summed_codons_ecoli, main="Codon Usage in E. coli", 
+        las=2, col=rainbow(length(summed_codons_ecoli)), ylab="Frequency")
+
+# Barplot for Mycobacterium codon usage
+barplot(summed_codons_mycobacterium, main="Codon Usage in Mycobacterium", 
+        las=2, col=rainbow(length(summed_codons_mycobacterium)), ylab="Frequency")
+```
+
+```{r}
+calc_rscu <- function(codon_usage) {
+  codon_usage / (sum(codon_usage) / length(codon_usage))
+}
+
+# Calculate RSCU for E. coli
+rscu_ecoli <- calc_rscu(summed_codons_ecoli)
+
+# Calculate RSCU for Mycobacterium
+rscu_mycobacterium <- calc_rscu(summed_codons_mycobacterium)
+
+# Print RSCU values
+print(rscu_ecoli)
+print(rscu_mycobacterium)
+```
+
+```{r}
+par(mfrow = c(2, 1))
+
+# Barplot for RSCU of E. coli
+barplot(rscu_ecoli, main="RSCU in E. coli", 
+        las=2, col=rainbow(length(rscu_ecoli)), ylab="RSCU")
+
+# Barplot for RSCU of Mycobacterium
+barplot(rscu_mycobacterium, main="RSCU in Mycobacterium", 
+        las=2, col=rainbow(length(rscu_mycobacterium)), ylab="RSCU")
+```
+
+```{r}
+library(seqinr)
+
+# Function to count k-mers of length k
+count_kmers <- function(protein_seq, k) {
+  kmers <- sapply(seq(1, length(protein_seq) - k + 1), function(i) {
+    paste(protein_seq[i:(i + k - 1)], collapse = "")
+  })
+  table(kmers)
+}
+
+# Convert protein sequences into a single string for k-mer counting
+mycobacterium_protein_seq <- unlist(protm)
+ecoli_protein_seq <- unlist(prot)
+
+# Count k-mers for k = 3 to 5
+mycobacterium_kmers_3 <- count_kmers(mycobacterium_protein_seq, 3)
+mycobacterium_kmers_4 <- count_kmers(mycobacterium_protein_seq, 4)
+mycobacterium_kmers_5 <- count_kmers(mycobacterium_protein_seq, 5)
+
+ecoli_kmers_3 <- count_kmers(ecoli_protein_seq, 3)
+ecoli_kmers_4 <- count_kmers(ecoli_protein_seq, 4)
+ecoli_kmers_5 <- count_kmers(ecoli_protein_seq, 5)
+
+```
+
+```{r}
+# Normalize k-mer frequencies
+normalize_kmers <- function(kmer_table) {
+  kmer_table / sum(kmer_table)
+}
+
+# Normalize k-mers for both organisms
+mycobacterium_kmers_3_norm <- normalize_kmers(mycobacterium_kmers_3)
+ecoli_kmers_3_norm <- normalize_kmers(ecoli_kmers_3)
+
+# Find top 10 over-represented k-mers
+over_represented_mycobacterium <- sort(mycobacterium_kmers_3_norm, decreasing = TRUE)[1:10]
+under_represented_mycobacterium <- sort(mycobacterium_kmers_3_norm)[1:10]
+
+over_represented_ecoli <- sort(ecoli_kmers_3_norm, decreasing = TRUE)[1:10]
+under_represented_ecoli <- sort(ecoli_kmers_3_norm)[1:10]
+
+# Combine into a data frame for comparison
+comparison_df <- data.frame(
+  Mycobacterium_Over = names(over_represented_mycobacterium),
+  Mycobacterium_Over_Freq = as.numeric(over_represented_mycobacterium),
+  Mycobacterium_Under = names(under_represented_mycobacterium),
+  Mycobacterium_Under_Freq = as.numeric(under_represented_mycobacterium),
+  Ecoli_Over = names(over_represented_ecoli),
+  Ecoli_Over_Freq = as.numeric(over_represented_ecoli),
+  Ecoli_Under = names(under_represented_ecoli),
+  Ecoli_Under_Freq = as.numeric(under_represented_ecoli)
+)
+
+print(comparison_df)
+```
+
+```{r}
+# Plot the top over-represented k-mers for both organisms
+par(mfrow = c(2, 1))
+
+# Over-represented k-mers
+barplot(over_represented_mycobacterium, main = "Over-represented 3-mers in Mycobacterium", col = "blue", las = 2)
+barplot(over_represented_ecoli, main = "Over-represented 3-mers in E. coli", col = "green", las = 2)
+
+# Under-represented k-mers
+barplot(under_represented_mycobacterium, main = "Under-represented 3-mers in Mycobacterium", col = "blue", las = 2)
+barplot(under_represented_ecoli, main = "Under-represented 3-mers in E. coli", col = "green", las = 2)
+```
