@@ -1,6 +1,6 @@
 ---
-title: "Part 1"
-author: "Tasfia Tasnim"
+title: "SLE777 AT4"
+author: "Tanjila Tabassum, Tasfia Tasnim, Razieh Fathinezhad"
 date: "2024-10-10"
 output: html_document
 ---
@@ -15,100 +15,19 @@ This is an R Markdown document. Markdown is a simple formatting syntax for autho
 
 When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
 
-Download gene_expression.tsv
+
+
+## This chunk contains the codes for:
+1. Downloading gene_expression.tsv
+2. Reading the tsv file
+3. Showing the table of the first six genes
 ```{r}
 URL="https://raw.githubusercontent.com/ghazkha/Assessment4/refs/heads/main/gene_expression.tsv"
 download.file(URL,destfile="gene_expression.tsv")
-```
-To read the tsv file
-```{r}
 expression <- read.table(URL,stringsAsFactors = FALSE, header=TRUE)
 expression
-```
-Table of the first six genes
-```{r}
 firstsixgenes <- expression[1:6,]
-```
-A column, mean of the other columns
-```{r}
-expression$GTEX.1117F.0226.SM.5GZZ7 <- as.numeric(expression$GTEX.1117F.0226.SM.5GZZ7)
-expression$GTEX.1117F.0426.SM.5EGHI <- as.numeric(expression$GTEX.1117F.0426.SM.5EGHI)
-expression$GTEX.1117F.0526.SM.5EGHJ <- as.numeric(expression$GTEX.1117F.0526.SM.5EGHJ)
-
-expression$columnmeans <- rowMeans(expression[,2:4])
-```
-10 highest expressed genes
-```{r}
-expression_sorted <- expression[order(-expression$columnmeans), ]
-top_10_genes <- head(expression_sorted, 10)
+firstsixgenes
 ```
 
-Number of genes mean <10
-```{r}
-lessexpressed <- subset(expression, columnmeans < 10)
-```
-Histogram mean values
-```{r}
-hist(expression$columnmeans,xlab="gene expression",main="mean expression")
-```
-
-
-
-Download growth_data.csv
-```{r}
-URL="https://raw.githubusercontent.com/ghazkha/Assessment4/refs/heads/main/growth_data.csv"
-download.file(URL,destfile="growth_data.csv")
-```
-To read csv file
-```{r}
-growth <- read.table(URL,sep=",",header=TRUE)
-growth
-```
-Mean and SD
-```{r}
-growth_numeric <- growth[-1,]
-
-growth_numeric$Circumf_2005_cm <- as.numeric(growth_numeric$Circumf_2005_cm)
-growth_numeric$Circumf_2010_cm <- as.numeric(growth_numeric$Circumf_2010_cm)
-growth_numeric$Circumf_2015_cm <- as.numeric(growth_numeric$Circumf_2015_cm)
-growth_numeric$Circumf_2020_cm <- as.numeric(growth_numeric$Circumf_2020_cm)
-
-colMeans(growth_numeric[,3, drop=FALSE])
-colMeans(growth_numeric[,6, drop=FALSE])
-
-sd(growth_numeric[,3])
-sd(growth_numeric[,6])
-```
-Boxplot start and end both sites
-```{r}
-TC2005 <- growth_numeric[,grep("Circumf_2005_cm",colnames(growth_numeric))]
-TC2020 <- growth_numeric[,grep("Circumf_2020_cm",colnames(growth_numeric))]
-boxplot(TC2005,TC2020,
-        ylab="circumference",
-        main="growth",
-        names = c("2005","2020"))
-```
-Mean Growth Last 10 Years
-```{r}
-northeast <- subset(growth_numeric,Site == "northeast")
-southwest <- subset(growth_numeric,Site == "southwest")
-
-mean(northeast$Difference <- northeast$Circumf_2020_cm - northeast$Circumf_2010_cm)
-mean(southwest$Difference <- southwest$Circumf_2020_cm - southwest$Circumf_2010_cm)
-```
-t.test
-```{r}
-# Calculate 10-year growth
-growth_numeric$growth_10_year <- growth_numeric$Circumf_2020_cm - growth_numeric$Circumf_2010_cm
-
-# Subset data by site
-growth_northeast <- subset(growth_numeric, Site == "northeast")
-growth_southwest <- subset(growth_numeric, Site == "southwest")
-
-# Perform t-test
-t_test_result <- t.test(growth_northeast$growth_10_year, growth_southwest$growth_10_year)
-
-# View the result
-t_test_result
-```
 
